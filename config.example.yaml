@@ -1,0 +1,7 @@
+# Example configuration file for pcf-config
+# Copy this file to config.yaml and modify as needed
+test:
+  data: 测试数据 
+  user:
+    name: 张三
+    age: 18
