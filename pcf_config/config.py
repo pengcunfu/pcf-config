@@ -21,7 +21,8 @@ class Config:
         """Load configuration file"""
         # Check if configuration file exists
         if not os.path.exists(config_file):
-            raise FileNotFoundError(f"Configuration file {config_file} not found")
+            raise FileNotFoundError(
+                f"Configuration file {config_file} not found")
 
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
@@ -58,7 +59,6 @@ class Config:
             if default is not ...:
                 return default
             raise KeyError(f"Configuration key '{key}' does not exist") from e
-
 
     def has_key(self, key: str) -> bool:
         """
@@ -112,9 +112,11 @@ class Config:
 
         try:
             with open(self._config_file, 'w', encoding='utf-8') as f:
-                yaml.safe_dump(self._config_data, f, default_flow_style=False, allow_unicode=True)
+                yaml.safe_dump(self._config_data, f,
+                               default_flow_style=False, allow_unicode=True)
         except Exception as e:
-            raise RuntimeError(f"Failed to save configuration file: {e}") from e
+            raise RuntimeError(
+                f"Failed to save configuration file: {e}") from e
 
     def reload(self):
         """Reload configuration file"""
@@ -122,6 +124,3 @@ class Config:
             raise RuntimeError("Configuration file path not set")
         self._config_data = None
         self._load_config(self._config_file)
-
-
-
