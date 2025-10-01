@@ -3,19 +3,17 @@
 PCF Config - A simple YAML configuration management library
 
 This package provides a simple and flexible way to manage YAML configuration files
-with support for nested keys, default values, and singleton pattern.
+with support for nested keys, default values, and read/write operations.
 """
 
-from .config import Config, get_config, get_config_with_default
+from .config import Config
 
-__version__ = "1.0.0"
-__author__ = "Your Name"
-__email__ = "your.email@example.com"
+__version__ = "1.1.1"
+__author__ = "pengcunfu"
+__email__ = "3173484026@qq.com"
 __description__ = "A simple YAML configuration management library"
 
 __all__ = [
     "Config",
-    "get_config", 
-    "get_config_with_default",
     "__version__",
 ]

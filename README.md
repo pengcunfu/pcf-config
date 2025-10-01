@@ -4,18 +4,18 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/pcf-config.svg)](https://pypi.org/project/pcf-config/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A simple and flexible YAML configuration management library for Python applications. PCF Config provides an easy way to manage configuration files with support for nested keys, default values, and singleton pattern.
+A simple and flexible YAML configuration management library for Python applications. PCF Config provides an easy way to manage configuration files with support for nested keys, default values, and read/write operations.
 
 ## Features
 
-- 🔧 **Simple API**: Easy-to-use methods for getting configuration values
+- 🔧 **Simple API**: Easy-to-use methods for getting and setting configuration values
 - 🏗️ **Nested Keys**: Support for dot-notation nested key access (e.g., `database.host`)
 - 🛡️ **Default Values**: Graceful handling of missing keys with default values
 - 🔄 **Hot Reload**: Reload configuration files at runtime
-- 📦 **Singleton Pattern**: Global configuration instance for consistent access
+- ✏️ **Read/Write**: Set configuration values and save to files
 - 🪶 **Lightweight**: Minimal dependencies (only PyYAML required)
 - 🎯 **Type Hints**: Full type hint support for better IDE experience
-- 📝 **Optional Logging**: Supports both loguru and standard logging
+- 🚀 **No Singleton**: Multiple instances supported for flexibility
 
 ## Installation
 
@@ -25,11 +25,6 @@ Install from PyPI:
 pip install pcf-config
 ```
 
-Install with optional loguru support for better logging:
-
-```bash
-pip install pcf-config[loguru]
-```
 
 ## Quick Start
 
@@ -50,15 +45,25 @@ api:
 2. **Use in your Python code**:
 
 ```python
-from pcf_config import get_config, get_config_with_default
+from pcf_config import Config
+
+# Create config instance with file path
+config = Config("config.yaml")
 
 # Get configuration values
-db_host = get_config("database.host")  # Returns: "localhost"
-db_port = get_config("database.port")  # Returns: 5432
+db_host = config.get("database.host")  # Returns: "localhost"
+db_port = config.get("database.port")  # Returns: 5432
 
 # Get with default values
-redis_host = get_config_with_default("redis.host", "localhost")
-timeout = get_config_with_default("api.timeout", 30)
+redis_host = config.get("redis.host", "localhost")
+timeout = config.get("api.timeout", 30)
+
+# Set new values
+config.set("database.timeout", 30)
+config.set("api.debug", True)
+
+# Save changes to file
+config.save()
 
 print(f"Database: {db_host}:{db_port}")
 print(f"Redis: {redis_host}")
@@ -66,94 +71,94 @@ print(f"Redis: {redis_host}")
 
 ## API Reference
 
-### Functions
+### Config Class
 
-#### `get_config(key: str) -> Any`
-
-Get a configuration value by key. Supports nested keys using dot notation.
+The main class for configuration management:
 
 ```python
-from pcf_config import get_config
+from pcf_config import Config
 
-# Simple key
-app_name = get_config("app_name")
+# Create config instance with file path
+config = Config("config.yaml")
 
-# Nested key
-db_host = get_config("database.host")
+# Get configuration values
+value = config.get("key")
+value_with_default = config.get("key", "default")
+
+# Set configuration values
+config.set("new.key", "value")
+
+# Save changes to file
+config.save()
+
+# Reload from file
+config.reload()
+
+# Check if key exists
+if config.has_key("key"):
+    print("Key exists")
 ```
+
+#### Methods
+
+##### `__init__(config_file: str)`
+Initialize Config instance with configuration file path.
+
+**Parameters:**
+- `config_file` (str): Path to the YAML configuration file
+
+##### `get(key: str, default: Any = ...) -> Any`
+Get configuration value by key. Supports nested keys using dot notation.
 
 **Parameters:**
 - `key` (str): Configuration key, supports dot notation for nested keys
-
-**Returns:**
-- `Any`: The configuration value
-
-**Raises:**
-- `KeyError`: If the key doesn't exist
-
-#### `get_config_with_default(key: str, default: Any = None) -> Any`
-
-Get a configuration value with a default fallback.
-
-```python
-from pcf_config import get_config_with_default
-
-# With default value
-debug = get_config_with_default("debug", False)
-max_connections = get_config_with_default("database.max_connections", 100)
-```
-
-**Parameters:**
-- `key` (str): Configuration key
 - `default` (Any): Default value if key doesn't exist
 
 **Returns:**
 - `Any`: The configuration value or default
 
-### Config Class
+**Raises:**
+- `KeyError`: If the key doesn't exist and no default is provided
 
-For advanced usage, you can use the `Config` class directly:
+##### `set(key: str, value: Any) -> None`
+Set configuration value. Creates nested structure if needed.
 
-```python
-from pcf_config import Config
+**Parameters:**
+- `key` (str): Configuration key, supports dot notation for nested keys
+- `value` (Any): Value to set
 
-config = Config()
-
-# Check if key exists
-if config.has_key("database.host"):
-    host = config.get("database.host")
-
-# Reload configuration
-config.reload()
-```
-
-#### Methods
-
-##### `get(key: str) -> Any`
-Get configuration value by key.
-
-##### `get_with_default(key: str, default: Any = None) -> Any`
-Get configuration value with default fallback.
-
-##### `has_key(key: str) -> bool`
-Check if a configuration key exists.
+##### `save() -> None`
+Save current configuration to the file.
 
 ##### `reload() -> None`
 Reload the configuration file from disk.
 
+##### `has_key(key: str) -> bool`
+Check if a configuration key exists.
+
+**Parameters:**
+- `key` (str): Configuration key to check
+
+**Returns:**
+- `bool`: True if key exists, False otherwise
+
 ## Configuration File Location
 
-PCF Config looks for configuration files in the following order:
+PCF Config requires you to specify the configuration file path when creating a Config instance:
 
-1. `config.yaml` in the current working directory
-2. `config.yaml` in the package directory
+```python
+config = Config("path/to/your/config.yaml")
+```
 
 ## Examples
 
 ### Basic Usage
 
 ```python
-from pcf_config import get_config, get_config_with_default
+from pcf_config import Config
+
+# Create config instance
+config = Config("config.yaml")
 
 # config.yaml:
 # app:
@@ -164,28 +169,30 @@ from pcf_config import get_config, get_config_with_default
 #   host: "localhost"
 #   port: 5432
 
-app_name = get_config("app.name")           # "My App"
-app_version = get_config("app.version")     # "1.0.0"
-db_host = get_config("database.host")       # "localhost"
+app_name = config.get("app.name")           # "My App"
+app_version = config.get("app.version")     # "1.0.0"
+db_host = config.get("database.host")       # "localhost"
 
 # Using defaults for missing keys
-cache_ttl = get_config_with_default("cache.ttl", 3600)  # 3600 (default)
-debug_mode = get_config_with_default("app.debug", False)  # True (from config)
+cache_ttl = config.get("cache.ttl", 3600)  # 3600 (default)
+debug_mode = config.get("app.debug", False)  # True (from config)
 ```
 
 ### Error Handling
 
 ```python
-from pcf_config import get_config, get_config_with_default
+from pcf_config import Config
+
+config = Config("config.yaml")
 
 try:
-    api_key = get_config("api.secret_key")
+    api_key = config.get("api.secret_key")
 except KeyError:
     print("API key not configured!")
     api_key = None
 
 # Or use default values to avoid exceptions
-api_key = get_config_with_default("api.secret_key", None)
+api_key = config.get("api.secret_key", None)
 if not api_key:
     print("Warning: API key not configured!")
 ```
@@ -195,7 +202,7 @@ if not api_key:
 ```python
 from pcf_config import Config
 
-config = Config()
+config = Config("config.yaml")
 
 # Initial load
 print(config.get("app.name"))
@@ -205,6 +212,28 @@ print(config.get("app.name"))
 # Reload configuration
 config.reload()
 print(config.get("app.name"))  # Updated value
+```
+
+### Read/Write Operations
+
+```python
+from pcf_config import Config
+
+config = Config("config.yaml")
+
+# Read existing values
+db_host = config.get("database.host")
+
+# Set new values
+config.set("database.timeout", 30)
+config.set("api.rate_limit", 1000)
+
+# Save changes to file
+config.save()
+
+# Verify changes
+print(config.get("database.timeout"))  # 30
+print(config.get("api.rate_limit"))    # 1000
 ```
 
 ### Complex Configuration
@@ -235,14 +264,16 @@ services:
 ```
 
 ```python
-from pcf_config import get_config
+from pcf_config import Config
+
+config = Config("config.yaml")
 
 # Access nested configurations
-primary_db = get_config("database.primary.host")
-username = get_config("database.primary.credentials.username")
+primary_db = config.get("database.primary.host")
+username = config.get("database.primary.credentials.username")
 
 # Access array elements
-services = get_config("services")
+services = config.get("services")
 auth_service = services[0]["url"]  # "https://auth.example.com"
 ```
 
@@ -295,6 +326,17 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v1.1.0
+- **BREAKING**: Removed singleton pattern - Config now requires explicit file path
+- **BREAKING**: Removed convenience functions `get_config` and `get_config_with_default`
+- **NEW**: Added `set()` method for modifying configuration values
+- **NEW**: Added `save()` method for persisting changes to file
+- **IMPROVED**: `get()` method now supports default values with `...` sentinel
+- **IMPROVED**: `reload()` method no longer requires file path parameter
+- **REMOVED**: loguru dependency - now uses standard logging only
+- **REMOVED**: All Chinese characters from source code
+- **IMPROVED**: Better error handling and type hints
 
 ### v1.0.0
 - Initial release

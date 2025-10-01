@@ -1,81 +1,52 @@
 #!/usr/bin/env python3
 """
-配置文件读取模块
-支持从YAML文件读取配置，提供简单的get方法
+Configuration file reading module
+Supports reading configuration from YAML files with simple get methods
 """
 
 import yaml
 import os
-from typing import Any, Optional
-
-try:
-    from loguru import logger
-    HAS_LOGURU = True
-except ImportError:
-    import logging
-    logger = logging.getLogger(__name__)
-    HAS_LOGURU = False
+from typing import Any
 
 
 class Config:
-    """配置管理类"""
+    """Configuration management class"""
 
-    _instance = None
-    _config_data = None
+    def __init__(self, config_file: str):
+        self._config_data = None
+        self._config_file = config_file
+        self._load_config(config_file)
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Config, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self):
-        if self._config_data is None:
-            self._load_config()
-
-    def _load_config(self, config_file: Optional[str] = None):
-        """加载配置文件"""
-        if config_file is None:
-            # 默认查找当前工作目录下的config.yaml
-            config_file = "config.yaml"
-            if not os.path.exists(config_file):
-                # 如果当前目录没有，尝试查找包目录下的config.yaml
-                config_file = os.path.join(os.path.dirname(__file__), "config.yaml")
-
-        # 检查配置文件是否存在
+    def _load_config(self, config_file: str):
+        """Load configuration file"""
+        # Check if configuration file exists
         if not os.path.exists(config_file):
-            raise FileNotFoundError(f"配置文件 {config_file} 不存在")
+            raise FileNotFoundError(f"Configuration file {config_file} not found")
 
         try:
             with open(config_file, 'r', encoding='utf-8') as f:
                 self._config_data = yaml.safe_load(f)
-            if HAS_LOGURU:
-                logger.info(f"✅ 配置文件 {config_file} 加载成功")
-            else:
-                logger.info(f"配置文件 {config_file} 加载成功")
         except Exception as e:
-            if HAS_LOGURU:
-                logger.error(f"❌ 加载配置文件失败: {e}")
-            else:
-                logger.error(f"加载配置文件失败: {e}")
             raise
 
-    def get(self, key: str) -> Any:
+    def get(self, key: str, default: Any = ...) -> Any:
         """
-        获取配置值
-        
+        Get configuration value
+
         Args:
-            key: 配置键，支持点号分隔的嵌套键，如 "llm.douyin.api_key"
-            
+            key: Configuration key, supports dot-separated nested keys like "llm.douyin.api_key"
+            default: Default value if key does not exist
+
         Returns:
-            Any: 配置值
-            
+            Any: Configuration value or default value
+
         Raises:
-            KeyError: 当配置键不存在时
+            KeyError: When configuration key does not exist and no default is provided
         """
         if self._config_data is None:
-            raise RuntimeError("配置未初始化")
+            raise RuntimeError("Configuration not initialized")
 
-        # 按点号分割键
+        # Split key by dots
         keys = key.split('.')
         value = self._config_data
 
@@ -84,33 +55,20 @@ class Config:
                 value = value[k]
             return value
         except (KeyError, TypeError) as e:
-            raise KeyError(f"配置键 '{key}' 不存在") from e
+            if default is not ...:
+                return default
+            raise KeyError(f"Configuration key '{key}' does not exist") from e
 
-    def get_with_default(self, key: str, default: Any = None) -> Any:
-        """
-        获取配置值，如果不存在则返回默认值
-        
-        Args:
-            key: 配置键
-            default: 默认值
-            
-        Returns:
-            Any: 配置值或默认值
-        """
-        try:
-            return self.get(key)
-        except KeyError:
-            return default
 
     def has_key(self, key: str) -> bool:
         """
-        检查配置键是否存在
-        
+        Check if configuration key exists
+
         Args:
-            key: 配置键
-            
+            key: Configuration key
+
         Returns:
-            bool: 键是否存在
+            bool: Whether the key exists
         """
         try:
             self.get(key)
@@ -118,75 +76,52 @@ class Config:
         except KeyError:
             return False
 
+    def set(self, key: str, value: Any):
+        """
+        Set configuration value
+
+        Args:
+            key: Configuration key, supports dot-separated nested keys
+            value: Configuration value
+        """
+        if self._config_data is None:
+            raise RuntimeError("Configuration not initialized")
+
+        # Split key by dots
+        keys = key.split('.')
+        data = self._config_data
+
+        # Navigate to parent of last key
+        for k in keys[:-1]:
+            if k not in data:
+                data[k] = {}
+            data = data[k]
+
+        # Set value of last key
+        data[keys[-1]] = value
+
+    def save(self):
+        """
+        Save configuration to file
+        """
+        if self._config_data is None:
+            raise RuntimeError("Configuration not initialized")
+
+        if self._config_file is None:
+            raise RuntimeError("Configuration file path not set")
+
+        try:
+            with open(self._config_file, 'w', encoding='utf-8') as f:
+                yaml.safe_dump(self._config_data, f, default_flow_style=False, allow_unicode=True)
+        except Exception as e:
+            raise RuntimeError(f"Failed to save configuration file: {e}") from e
+
     def reload(self):
-        """重新加载配置文件"""
+        """Reload configuration file"""
+        if self._config_file is None:
+            raise RuntimeError("Configuration file path not set")
         self._config_data = None
-        self._load_config()
-        if HAS_LOGURU:
-            logger.info("🔄 配置文件已重新加载")
-        else:
-            logger.info("配置文件已重新加载")
+        self._load_config(self._config_file)
 
 
-# 全局配置实例（延迟创建）
-config = None
 
-
-# 便捷函数
-def get_config(key: str) -> Any:
-    """
-    获取配置值的便捷函数
-    
-    Args:
-        key: 配置键
-        
-    Returns:
-        Any: 配置值
-    """
-    global config
-    if config is None:
-        config = Config()
-    return config.get(key)
-
-
-def get_config_with_default(key: str, default: Any = None) -> Any:
-    """
-    获取配置值的便捷函数（带默认值）
-    
-    Args:
-        key: 配置键
-        default: 默认值
-        
-    Returns:
-        Any: 配置值或默认值
-    """
-    global config
-    if config is None:
-        config = Config()
-    return config.get_with_default(key, default)
-
-
-# 示例用法
-if __name__ == "__main__":
-    # 测试配置读取
-    try:
-        # 测试TTS配置
-        access_token = get_config("douyin_tts.access_token")
-        app_id = get_config("douyin_tts.app_id")
-        print(f"TTS Access Token: {access_token}")
-        print(f"TTS App ID: {app_id}")
-
-        # 测试LLM配置
-        api_key = get_config("douyin_llm.api_key")
-        model = get_config("douyin_llm.model")
-        print(f"LLM API Key: {api_key}")
-        print(f"LLM Model: {model}")
-
-        # 测试嵌套配置
-        voice_type = get_config("douyin_tts.voice_type")
-        print(f"Voice Type: {voice_type}")
-
-    except KeyError as e:
-        print(f"配置键不存在: {e}")
-    except Exception as e:
-        print(f"配置读取失败: {e}")

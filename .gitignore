@@ -21,10 +21,3 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
-
-# Project specific
-config.yaml
-.pypirc
-docs/
-.pypirc.example
-.pytest_cache

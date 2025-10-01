@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pcf-config"
-version = "1.0.2"
+version = "1.1.1"
 description = "A simple YAML configuration management library"
 readme = "README.md"
 license = "MIT"
@@ -34,7 +34,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-loguru = ["loguru>=0.5.0"]
 dev = [
     "pytest>=6.0.0",
     "pytest-cov>=2.10.0",
@@ -70,4 +69,4 @@ disallow_untyped_defs = true
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
-addopts = "--cov=pcf_config --cov-report=html --cov-report=term-missing"
+addopts = ""
