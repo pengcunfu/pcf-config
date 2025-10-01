@@ -27,3 +27,4 @@ config.yaml
 .pypirc
 docs/
 .pypirc.example
+.pytest_cache

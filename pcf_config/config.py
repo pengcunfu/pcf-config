@@ -128,8 +128,8 @@ class Config:
             logger.info("配置文件已重新加载")
 
 
-# 创建全局配置实例
-config = Config()
+# 全局配置实例（延迟创建）
+config = None
 
 
 # 便捷函数
@@ -143,6 +143,9 @@ def get_config(key: str) -> Any:
     Returns:
         Any: 配置值
     """
+    global config
+    if config is None:
+        config = Config()
     return config.get(key)
 
 
@@ -157,6 +160,9 @@ def get_config_with_default(key: str, default: Any = None) -> Any:
     Returns:
         Any: 配置值或默认值
     """
+    global config
+    if config is None:
+        config = Config()
     return config.get_with_default(key, default)
 
 

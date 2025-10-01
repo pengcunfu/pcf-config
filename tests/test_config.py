@@ -21,22 +21,15 @@ class TestConfig:
         Config._instance = None
         Config._config_data = None
         
-        # Create temporary config file
+        # Use config.example.yaml content
         self.test_config = {
-            'app': {
-                'name': 'Test App',
-                'version': '1.0.0',
-                'debug': True
-            },
-            'database': {
-                'host': 'localhost',
-                'port': 5432,
-                'credentials': {
-                    'username': 'admin',
-                    'password': 'secret'
+            'test': {
+                'data': '测试数据',
+                'user': {
+                    'name': '张三',
+                    'age': 18
                 }
-            },
-            'list_example': ['item1', 'item2', 'item3']
+            }
         }
         
         # Create temporary directory and config file
@@ -67,17 +60,16 @@ class TestConfig:
     def test_get_simple_key(self):
         """Test getting simple configuration keys"""
         config = Config()
-        assert config.get('app.name') == 'Test App'
-        assert config.get('app.version') == '1.0.0'
-        assert config.get('app.debug') is True
+        assert config.get('test.data') == '测试数据'
+        assert config.get('test.user.name') == '张三'
+        assert config.get('test.user.age') == 18
     
     def test_get_nested_key(self):
         """Test getting nested configuration keys"""
         config = Config()
-        assert config.get('database.host') == 'localhost'
-        assert config.get('database.port') == 5432
-        assert config.get('database.credentials.username') == 'admin'
-        assert config.get('database.credentials.password') == 'secret'
+        assert config.get('test.user.name') == '张三'
+        assert config.get('test.user.age') == 18
+        assert config.get('test.data') == '测试数据'
     
     def test_get_nonexistent_key(self):
         """Test getting non-existent keys raises KeyError"""
@@ -89,7 +81,7 @@ class TestConfig:
         """Test getting keys with default values"""
         config = Config()
         # Existing key should return actual value
-        assert config.get_with_default('app.name', 'default') == 'Test App'
+        assert config.get_with_default('test.data', 'default') == '测试数据'
         # Non-existent key should return default
         assert config.get_with_default('nonexistent.key', 'default') == 'default'
         # No default specified should return None
@@ -98,32 +90,32 @@ class TestConfig:
     def test_has_key(self):
         """Test checking if keys exist"""
         config = Config()
-        assert config.has_key('app.name') is True
-        assert config.has_key('database.credentials.username') is True
+        assert config.has_key('test.data') is True
+        assert config.has_key('test.user.name') is True
         assert config.has_key('nonexistent.key') is False
     
     def test_convenience_functions(self):
         """Test convenience functions"""
-        assert get_config('app.name') == 'Test App'
-        assert get_config_with_default('app.name', 'default') == 'Test App'
+        assert get_config('test.data') == '测试数据'
+        assert get_config_with_default('test.user.name', 'default') == '张三'
         assert get_config_with_default('nonexistent.key', 'default') == 'default'
     
     def test_reload(self):
         """Test configuration reload"""
         config = Config()
-        original_name = config.get('app.name')
+        original_data = config.get('test.data')
         
         # Modify config file
         modified_config = self.test_config.copy()
-        modified_config['app']['name'] = 'Modified App'
+        modified_config['test']['data'] = '修改后的数据'
         
         with open(self.config_file, 'w', encoding='utf-8') as f:
             yaml.safe_dump(modified_config, f)
         
         # Reload and check
         config.reload()
-        assert config.get('app.name') == 'Modified App'
-        assert config.get('app.name') != original_name
+        assert config.get('test.data') == '修改后的数据'
+        assert config.get('test.data') != original_data
     
     def test_missing_config_file(self):
         """Test behavior when config file is missing"""
