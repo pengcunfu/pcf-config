@@ -348,4 +348,4 @@ pytest tests/test_config.py
 
 ## 支持
 
-如果您遇到任何问题或有疑问，请在GitHub上[打开issue](https://github.com/yourusername/pcf-config/issues)。
+如果您遇到任何问题或有疑问，请在GitHub上[打开issue](https://github.com/pengcunfu/pcf-config/issues)。

@@ -21,11 +21,10 @@ class Config:
         """Load configuration file"""
         # Check if configuration file exists
         if not os.path.exists(config_file):
-            raise FileNotFoundError(
-                f"Configuration file {config_file} not found")
+            raise FileNotFoundError(f"Configuration file {config_file} not found")
 
         try:
-            with open(config_file, 'r', encoding='utf-8') as f:
+            with open(config_file, "r", encoding="utf-8") as f:
                 self._config_data = yaml.safe_load(f)
         except Exception as e:
             raise
@@ -48,7 +47,7 @@ class Config:
             raise RuntimeError("Configuration not initialized")
 
         # Split key by dots
-        keys = key.split('.')
+        keys = key.split(".")
         value = self._config_data
 
         try:
@@ -88,7 +87,7 @@ class Config:
             raise RuntimeError("Configuration not initialized")
 
         # Split key by dots
-        keys = key.split('.')
+        keys = key.split(".")
         data = self._config_data
 
         # Navigate to parent of last key
@@ -111,12 +110,12 @@ class Config:
             raise RuntimeError("Configuration file path not set")
 
         try:
-            with open(self._config_file, 'w', encoding='utf-8') as f:
-                yaml.safe_dump(self._config_data, f,
-                               default_flow_style=False, allow_unicode=True)
+            with open(self._config_file, "w", encoding="utf-8") as f:
+                yaml.safe_dump(
+                    self._config_data, f, default_flow_style=False, allow_unicode=True
+                )
         except Exception as e:
-            raise RuntimeError(
-                f"Failed to save configuration file: {e}") from e
+            raise RuntimeError(f"Failed to save configuration file: {e}") from e
 
     def reload(self):
         """Reload configuration file"""

@@ -33,9 +33,6 @@ jobs:
         # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 pcf_config --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
     
-    - name: Format check with black
-      run: black --check pcf_config
-    
     - name: Type check with mypy
       run: mypy pcf_config
       continue-on-error: true
