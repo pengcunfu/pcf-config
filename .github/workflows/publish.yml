@@ -9,7 +9,39 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+    
+    - name: Lint with flake8
+      run: |
+        flake8 pcf_config --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 pcf_config --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    
+    - name: Type check with mypy
+      run: mypy pcf_config
+      continue-on-error: true
+    
+    - name: Test with pytest
+      run: pytest --cov=pcf_config
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     
     steps:
@@ -41,6 +73,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      id-token: write
     environment: 
       name: pypi
       url: https://pypi.org/p/pcf-config
