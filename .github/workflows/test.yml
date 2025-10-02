@@ -1,11 +1,10 @@
 name: Tests
 
 on:
-  # Temporarily disabled for debugging
-  # push:
-  #   branches: [ main, develop ]
-  # pull_request:
-  #   branches: [ main, develop ]
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
   workflow_dispatch:
 
 jobs:
