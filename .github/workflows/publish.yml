@@ -55,28 +55,48 @@ jobs:
     - name: Install twine
       run: pip install twine
     
-    - name: Check secrets configuration
+    - name: Check environment variables configuration
       run: |
-        echo "Checking secrets configuration..."
-        if [ -n "${{ secrets.TESTPYPI }}" ]; then
-          echo "✅ TESTPYPI secret is configured (length: ${#TESTPYPI})"
+        echo "Checking environment variables configuration..."
+        if [ -n "${{ vars.TESTPYPI }}" ]; then
+          echo "✅ TESTPYPI variable is configured"
         else
-          echo "❌ TESTPYPI secret is NOT configured"
+          echo "❌ TESTPYPI variable is NOT configured"
         fi
-        if [ -n "${{ secrets.PYPI }}" ]; then
-          echo "✅ PYPI secret is configured (length: ${#PYPI})"
+        if [ -n "${{ vars.PYPI }}" ]; then
+          echo "✅ PYPI variable is configured"
         else
-          echo "❌ PYPI secret is NOT configured"
+          echo "❌ PYPI variable is NOT configured"
         fi
+    
+    - name: Create .pypirc configuration
+      run: |
+        echo "Creating .pypirc configuration file..."
+        cat > ~/.pypirc << EOF
+        [distutils]
+        index-servers =
+            pypi
+            testpypi
+
+        [pypi]
+        username = __token__
+        password = ${{ vars.PYPI }}
+
+        [testpypi]
+        repository = https://test.pypi.org/legacy/
+        username = __token__
+        password = ${{ vars.TESTPYPI }}
+        EOF
+        echo "✅ .pypirc configuration created"
     
     - name: Publish to TestPyPI
       run: |
         echo "Publishing to TestPyPI..."
-        twine upload --repository testpypi --username __token__ --password ${{ secrets.TESTPYPI }} dist/*
+        twine upload --repository testpypi dist/*
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     
     - name: Publish to PyPI
       run: |
         echo "Publishing to PyPI..."
-        twine upload --username __token__ --password ${{ secrets.PYPI }} dist/*
+        twine upload dist/*
       if: github.event_name == 'release'

@@ -83,8 +83,34 @@ jobs:
         name: dist-test
         path: dist/
     
+    - name: Install twine
+      run: pip install twine
+    
+    - name: Check environment variables configuration
+      run: |
+        echo "Checking environment variables configuration..."
+        if [ -n "${{ vars.TESTPYPI }}" ]; then
+          echo "✅ TESTPYPI variable is configured"
+        else
+          echo "❌ TESTPYPI variable is NOT configured"
+        fi
+    
+    - name: Create .pypirc configuration
+      run: |
+        echo "Creating .pypirc configuration file..."
+        cat > ~/.pypirc << EOF
+        [distutils]
+        index-servers =
+            testpypi
+
+        [testpypi]
+        repository = https://test.pypi.org/legacy/
+        username = __token__
+        password = ${{ vars.TESTPYPI }}
+        EOF
+        echo "✅ .pypirc configuration created"
+    
     - name: Publish to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
-        password: ${{ secrets.TESTPYPI }}
+      run: |
+        echo "Publishing to TestPyPI..."
+        twine upload --repository testpypi dist/*
