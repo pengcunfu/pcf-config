@@ -7,12 +7,12 @@ name = "pcf-config"
 version = "1.1.2"
 description = "A simple YAML configuration management library"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "pengcunfu", email = "3173484026@qq.com"}
 ]
 maintainers = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "pengcunfu", email = "3173484026@qq.com"}
 ]
 keywords = ["config", "yaml", "configuration", "settings"]
 classifiers = [
@@ -43,17 +43,15 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/pcf-config"
-Repository = "https://github.com/yourusername/pcf-config"
-Documentation = "https://github.com/yourusername/pcf-config#readme"
-"Bug Tracker" = "https://github.com/yourusername/pcf-config/issues"
+Homepage = "https://github.com/pengcunfu/pcf-config"
+Repository = "https://github.com/pengcunfu/pcf-config"
+Documentation = "https://github.com/pengcunfu/pcf-config#readme"
+"Bug Tracker" = "https://github.com/pengcunfu/pcf-config/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pcf_config*"]
 
-[tool.setuptools.package-data]
-pcf_config = ["py.typed"]
 
 [tool.black]
 line-length = 88
