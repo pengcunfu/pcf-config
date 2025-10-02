@@ -8,6 +8,10 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   create-release:
     runs-on: windows-latest
@@ -20,12 +24,10 @@ jobs:
     
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }} - Windows runners for better compatibility
+        name: Release ${{ github.ref_name }} - Windows runners for better compatibility
         body: |
           ## 🎉 Release ${{ github.ref_name }}
 
@@ -54,6 +56,8 @@ jobs:
           All tests pass with 100% coverage across Python 3.9-3.12
         draft: false
         prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test:
     runs-on: windows-latest
