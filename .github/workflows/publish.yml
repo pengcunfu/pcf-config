@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     
     steps:
     - uses: actions/checkout@v4
@@ -18,7 +18,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9.13'
+        python-version: '3.9'
     
     - name: Install build dependencies
       run: |
@@ -39,7 +39,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     environment: 
       name: pypi
@@ -59,22 +59,22 @@ jobs:
     
     - name: Check environment variables configuration
       run: |
-        echo "Checking environment variables configuration..."
-        if [ -n "${{ vars.TESTPYPI }}" ]; then
-          echo "✅ TESTPYPI variable is configured"
-        else
-          echo "❌ TESTPYPI variable is NOT configured"
-        fi
-        if [ -n "${{ vars.PYPI }}" ]; then
-          echo "✅ PYPI variable is configured"
-        else
-          echo "❌ PYPI variable is NOT configured"
-        fi
+        Write-Host "Checking environment variables configuration..."
+        if ("${{ vars.TESTPYPI }}" -ne "") {
+          Write-Host "✅ TESTPYPI variable is configured"
+        } else {
+          Write-Host "❌ TESTPYPI variable is NOT configured"
+        }
+        if ("${{ vars.PYPI }}" -ne "") {
+          Write-Host "✅ PYPI variable is configured"
+        } else {
+          Write-Host "❌ PYPI variable is NOT configured"
+        }
     
     - name: Create .pypirc configuration
       run: |
-        echo "Creating .pypirc configuration file..."
-        cat > ~/.pypirc << EOF
+        Write-Host "Creating .pypirc configuration file..."
+        $pypircContent = @"
         [distutils]
         index-servers =
             pypi
@@ -88,17 +88,18 @@ jobs:
         repository = https://test.pypi.org/legacy/
         username = __token__
         password = ${{ vars.TESTPYPI }}
-        EOF
-        echo "✅ .pypirc configuration created"
+        "@
+        $pypircContent | Out-File -FilePath "$env:USERPROFILE\.pypirc" -Encoding utf8
+        Write-Host "✅ .pypirc configuration created"
     
     - name: Publish to TestPyPI
       run: |
-        echo "Publishing to TestPyPI..."
+        Write-Host "Publishing to TestPyPI..."
         twine upload --repository testpypi dist/*
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     
     - name: Publish to PyPI
       run: |
-        echo "Publishing to PyPI..."
+        Write-Host "Publishing to PyPI..."
         twine upload dist/*
       if: github.event_name == 'release'
