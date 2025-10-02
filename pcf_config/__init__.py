@@ -8,7 +8,7 @@ with support for nested keys, default values, and read/write operations.
 
 from .config import Config
 
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 __author__ = "pengcunfu"
 __email__ = "3173484026@qq.com"
 __description__ = "A simple YAML configuration management library"
