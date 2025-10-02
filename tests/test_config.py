@@ -158,6 +158,44 @@ class TestConfig:
         assert config.get('database.host') == 'localhost'
         assert config.get('database.port') == 3306
 
+    def test_edge_cases(self):
+        """Test edge cases and error conditions"""
+        config = Config(self.config_file)
+        
+        # Test configuration not initialized scenarios
+        # Force _config_data to None to test error handling
+        original_data = config._config_data
+        config._config_data = None
+        
+        with pytest.raises(RuntimeError, match="Configuration not initialized"):
+            config.get('test.key')
+            
+        with pytest.raises(RuntimeError, match="Configuration not initialized"):
+            config.set('test.key', 'value')
+            
+        with pytest.raises(RuntimeError, match="Configuration not initialized"):
+            config.save()
+            
+        # Restore data
+        config._config_data = original_data
+        
+        # Test configuration file path not set
+        original_file = config._config_file
+        config._config_file = None
+        
+        with pytest.raises(RuntimeError, match="Configuration file path not set"):
+            config.save()
+            
+        with pytest.raises(RuntimeError, match="Configuration file path not set"):
+            config.reload()
+            
+        # Restore file path
+        config._config_file = original_file
+        
+        # Test save exception handling
+        config._config_file = "/invalid/path/that/does/not/exist/config.yaml"
+        with pytest.raises(RuntimeError, match="Failed to save configuration file"):
+            config.save()
 
 
 if __name__ == '__main__':
