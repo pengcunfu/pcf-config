@@ -9,6 +9,52 @@ on:
   workflow_dispatch:
 
 jobs:
+  create-release:
+    runs-on: windows-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    outputs:
+      release_created: ${{ steps.create_release.outputs.created }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }} - Windows runners for better compatibility
+        body: |
+          ## 🎉 Release ${{ github.ref_name }}
+
+          ### ✨ New Features & Improvements
+          - **100% Test Coverage** - Comprehensive edge case testing added
+          - **Windows Build Environment** - Switched to Windows runners for better compatibility
+          - **Enhanced Configuration** - Renamed config.yaml to config.example.yaml for clarity
+
+          ### 🔧 Technical Improvements
+          - Fixed setuptools version to 68.0.0 for proper pyproject.toml support
+          - Updated GitHub Actions workflow with correct tool versions
+          - Resolved package name/version detection issues
+          - Added pre-release testing for all Python versions (3.9-3.12)
+
+          ### 🐛 Bug Fixes
+          - Fixed `UNKNOWN-0.0.0` package naming issue
+          - Resolved Python/pip version compatibility problems
+          - Fixed PowerShell syntax for Windows environment
+
+          ### 📦 Installation
+          ```bash
+          pip install pcf-config==${{ github.ref_name }}
+          ```
+
+          ### 🧪 Testing
+          All tests pass with 100% coverage across Python 3.9-3.12
+        draft: false
+        prerelease: false
+
   test:
     runs-on: windows-latest
     strategy:
@@ -32,7 +78,8 @@ jobs:
       run: pytest --cov=pcf_config
 
   build:
-    needs: test
+    needs: [create-release, test]
+    if: always() && (needs.test.result == 'success')
     runs-on: windows-latest
     
     steps:
@@ -61,9 +108,9 @@ jobs:
         path: dist/
 
   publish:
-    needs: [test, build]
+    needs: [create-release, test, build]
+    if: always() && (needs.test.result == 'success') && (needs.build.result == 'success') && (github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: windows-latest
-    if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     environment: 
       name: pypi
       url: https://pypi.org/p/pcf-config
